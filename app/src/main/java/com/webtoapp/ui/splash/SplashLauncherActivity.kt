@@ -127,22 +127,26 @@ fun SplashLauncherScreen(
 
     LaunchedEffect(Unit) {
         if (activationEnabled) {
-            if (activationRequireEveryTime) {
+            if (activationRequireEveryTime && !remoteConfig.enabled) {
                 activation.resetActivation(activationAppId)
                 isActivated = false
                 showActivationDialog = true
             } else if (remoteConfig.enabled) {
-                val ok = activation.isActivated(activationAppId).first() &&
-                    activation.isRemoteStartupAllowed(
-                        activationAppId,
-                        activation.buildRemoteRequest(
-                            verifyUrl = remoteConfig.verifyUrl,
-                            publicKeyBase64 = remoteConfig.publicKeyBase64,
-                            offlinePolicy = remoteConfig.offlinePolicy
-                        )
-                    )
-                isActivated = ok
-                showActivationDialog = !ok
+                val remoteRequest = activation.buildRemoteRequest(
+                    verifyUrl = remoteConfig.verifyUrl,
+                    publicKeyBase64 = remoteConfig.publicKeyBase64,
+                    offlinePolicy = remoteConfig.offlinePolicy
+                )
+                if (activationRequireEveryTime) {
+                    val result = activation.reverifyRemoteWithCachedCode(activationAppId, remoteRequest)
+                    isActivated = result is com.webtoapp.core.activation.ActivationResult.Success || result is com.webtoapp.core.activation.ActivationResult.AlreadyActivated
+                    showActivationDialog = !isActivated
+                } else {
+                    val ok = activation.isActivated(activationAppId).first() &&
+                        activation.isRemoteStartupAllowed(activationAppId, remoteRequest)
+                    isActivated = ok
+                    showActivationDialog = !ok
+                }
             } else {
                 val ok = activation.resolveStartupActivation(activationAppId)
                 isActivated = ok

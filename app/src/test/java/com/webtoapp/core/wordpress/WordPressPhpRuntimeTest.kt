@@ -27,7 +27,7 @@ class WordPressPhpRuntimeTest {
         val runtime = WordPressPhpRuntime(context)
         val method = WordPressPhpRuntime::class.java.getDeclaredMethod(
             "buildPhpCommand",
-            String::class.java,
+            List::class.java,
             Int::class.javaPrimitiveType,
             String::class.java,
             String::class.java
@@ -37,7 +37,7 @@ class WordPressPhpRuntimeTest {
         @Suppress("UNCHECKED_CAST")
         val command = method.invoke(
             runtime,
-            "/tmp/php",
+            listOf("/tmp/php"),
             18500,
             context.filesDir.absolutePath,
             File(context.cacheDir, "php_router_server.php").absolutePath
