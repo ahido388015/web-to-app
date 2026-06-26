@@ -61,10 +61,10 @@ fun CreatePythonAppScreen(
     var entryFile by remember { mutableStateOf("app.py") }
     var entryModule by remember { mutableStateOf("") }
     var serverType by remember { mutableStateOf("builtin") }
-    var landscapeMode by remember { mutableStateOf(false) }
     var envVars by remember { mutableStateOf<Map<String, String>>(emptyMap()) }
     var newEnvKey by remember { mutableStateOf("") }
     var newEnvValue by remember { mutableStateOf("") }
+    var customPythonExtensions by remember { mutableStateOf<List<com.webtoapp.data.model.CustomPythonExtension>>(emptyList()) }
 
     var selectedProjectDir by remember { mutableStateOf<String?>(null) }
     var sourceProjectPath by remember { mutableStateOf<String?>(null) }
@@ -102,8 +102,8 @@ fun CreatePythonAppScreen(
                     entryFile = config.entryFile
                     entryModule = config.entryModule
                     serverType = config.serverType
-                    landscapeMode = config.landscapeMode
                     envVars = config.envVars.toMutableMap()
+                    customPythonExtensions = config.customPythonExtensions
                     detectedFramework = config.framework
                     projectId = config.projectId
                     selectedProjectDir = config.projectName
@@ -336,7 +336,7 @@ fun CreatePythonAppScreen(
                                 envVars = envVars,
                                 requirementsFile = if (localProjectDir?.let { File(it, "requirements.txt").exists() } == true) "requirements.txt" else "",
                                 hasPipDeps = localProjectDir?.let { File(it, "requirements.txt").exists() } ?: false,
-                                landscapeMode = landscapeMode
+                                customPythonExtensions = customPythonExtensions
                             ),
                             appIcon,
                             "AURORA"
@@ -573,6 +573,11 @@ fun CreatePythonAppScreen(
                         }
                     },
                     onRemove = { key -> envVars = envVars.toMutableMap().apply { remove(key) } }
+                )
+
+                PythonExtensionsCard(
+                    customExtensions = customPythonExtensions,
+                    onCustomExtensionsChange = { customPythonExtensions = it }
                 )
             }
             }

@@ -16,6 +16,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -23,6 +24,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.zIndex
 import android.webkit.WebView
 import com.webtoapp.core.i18n.Strings
 import com.webtoapp.core.logging.AppLogger
@@ -132,6 +134,16 @@ private fun TabsMode(
 ) {
     var selectedTab by remember { mutableIntStateOf(0) }
 
+    LaunchedEffect(selectedTab, sites.size) {
+        val site = sites.getOrNull(selectedTab)
+        if (site != null) {
+            webViewCallbacks.onTitleChanged(site.name.ifBlank { extractDomain(site.url) })
+            if (site.url.isNotBlank()) {
+                webViewCallbacks.onPageStarted(site.url)
+            }
+        }
+    }
+
     Scaffold(
         containerColor = Color.Transparent,
         contentWindowInsets = WindowInsets(0),
@@ -194,9 +206,36 @@ private fun TabsMode(
                 .fillMaxSize()
                 .padding(padding)
         ) {
-            sites.getOrNull(selectedTab)?.let { site ->
-                key(site.id) {
-                    SiteContent(site, config, webViewConfig, webViewCallbacks, webViewManager, onWebViewCreated, swipeRefreshEnabled, isRefreshing, onRefresh)
+            val visitedTabs = remember { mutableStateMapOf<Int, Boolean>() }
+            visitedTabs[selectedTab] = true
+
+            sites.forEachIndexed { index, site ->
+                val isVisited = visitedTabs.containsKey(index)
+                if (isVisited) {
+                    val isVisible = index == selectedTab
+                    key(site.id) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .zIndex(if (isVisible) 1f else 0f)
+                                .then(
+                                    if (isVisible) Modifier
+                                    else Modifier.alpha(0f)
+                                )
+                        ) {
+                            SiteContent(
+                                site = site,
+                                config = config,
+                                webViewConfig = webViewConfig,
+                                webViewCallbacks = webViewCallbacks,
+                                webViewManager = webViewManager,
+                                onWebViewCreated = if (isVisible) onWebViewCreated else ({ }),
+                                swipeRefreshEnabled = swipeRefreshEnabled,
+                                isRefreshing = isRefreshing,
+                                onRefresh = onRefresh
+                            )
+                        }
+                    }
                 }
             }
         }

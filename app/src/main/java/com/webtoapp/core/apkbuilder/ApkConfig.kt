@@ -17,6 +17,7 @@ data class ApkConfig(
     val floatingWindow: FloatingWindowBlock = FloatingWindowBlock(),
     val proxy: ProxyBlock = ProxyBlock(),
     val dns: DnsBlock = DnsBlock(),
+    val tlsFingerprint: TlsFingerprintBlock = TlsFingerprintBlock(),
     val errorPage: ErrorPageBlock = ErrorPageBlock(),
     val splash: SplashBlock = SplashBlock(),
     val media: MediaBlock = MediaBlock(),
@@ -160,6 +161,8 @@ data class ApkConfig(
     val enableCorsBypass: Boolean get() = webViewBehavior.enableCorsBypass
     val allowMixedContent: Boolean get() = webViewBehavior.allowMixedContent
     val enableBlobDownloadInterception: Boolean get() = webViewBehavior.enableBlobDownloadInterception
+    val enablePrintBridge: Boolean get() = webViewBehavior.enablePrintBridge
+    val downloadEnabled: Boolean get() = webView.downloadEnabled
     val enableCloudflareCompat: Boolean get() = webViewBehavior.enableCloudflareCompat
     val primeUserActivation: Boolean get() = webViewBehavior.primeUserActivation
 
@@ -227,6 +230,10 @@ data class ApkConfig(
     val hostsMappingEnabled: Boolean get() = proxy.hostsMappingEnabled
     val hostsMappings: List<com.webtoapp.data.model.HostMappingEntry> get() = proxy.hostsMappings
 
+    val tlsFingerprintEnabled: Boolean get() = tlsFingerprint.enabled
+    val tlsFingerprintTemplate: String get() = tlsFingerprint.template
+    val tlsFingerprintCustomCiphers: List<String> get() = tlsFingerprint.customCipherSuites
+
     val dnsMode: String get() = dns.mode
     val dnsConfig: DnsApkConfig get() = dns.config
 
@@ -259,7 +266,6 @@ data class ApkConfig(
     val htmlEntryFile: String get() = html.entryFile
     val htmlEnableJavaScript: Boolean get() = html.enableJavaScript
     val htmlEnableLocalStorage: Boolean get() = html.enableLocalStorage
-    val htmlLandscapeMode: Boolean get() = html.landscapeMode
 
     val galleryItems: List<GalleryShellItemConfig> get() = gallery.items
     val galleryPlayMode: String get() = gallery.playMode
@@ -332,20 +338,18 @@ data class ApkConfig(
     val wordpressSiteLanguage: String get() = wordpress.siteLanguage
     val wordpressAutoInstall: Boolean get() = wordpress.autoInstall
     val wordpressPhpPort: Int get() = wordpress.phpPort
-    val wordpressLandscapeMode: Boolean get() = wordpress.landscapeMode
 
     val nodejsMode: String get() = nodejs.mode
     val nodejsPort: Int get() = nodejs.port
     val nodejsEntryFile: String get() = nodejs.entryFile
     val nodejsEnvVars: Map<String, String> get() = nodejs.envVars
-    val nodejsLandscapeMode: Boolean get() = nodejs.landscapeMode
+    val nodejsCustomNodeExtensions: List<com.webtoapp.data.model.CustomNodeExtension> get() = nodejs.customNodeExtensions
 
     val phpAppFramework: String get() = phpApp.framework
     val phpAppDocumentRoot: String get() = phpApp.documentRoot
     val phpAppEntryFile: String get() = phpApp.entryFile
     val phpAppPort: Int get() = phpApp.port
     val phpAppEnvVars: Map<String, String> get() = phpApp.envVars
-    val phpAppLandscapeMode: Boolean get() = phpApp.landscapeMode
 
     val pythonAppFramework: String get() = pythonApp.framework
     val pythonAppEntryFile: String get() = pythonApp.entryFile
@@ -353,7 +357,7 @@ data class ApkConfig(
     val pythonAppServerType: String get() = pythonApp.serverType
     val pythonAppPort: Int get() = pythonApp.port
     val pythonAppEnvVars: Map<String, String> get() = pythonApp.envVars
-    val pythonAppLandscapeMode: Boolean get() = pythonApp.landscapeMode
+    val pythonAppCustomPythonExtensions: List<com.webtoapp.data.model.CustomPythonExtension> get() = pythonApp.customPythonExtensions
 
     val goAppFramework: String get() = goApp.framework
     val goAppBinaryName: String get() = goApp.binaryName
@@ -361,13 +365,11 @@ data class ApkConfig(
     val goAppPort: Int get() = goApp.port
     val goAppStaticDir: String get() = goApp.staticDir
     val goAppEnvVars: Map<String, String> get() = goApp.envVars
-    val goAppLandscapeMode: Boolean get() = goApp.landscapeMode
 
     val multiWebSites: List<com.webtoapp.core.shell.MultiWebSiteShellConfig> get() = multiWeb.sites
     val multiWebDisplayMode: String get() = multiWeb.displayMode
     val multiWebRefreshInterval: Int get() = multiWeb.refreshInterval
     val multiWebShowSiteIcons: Boolean get() = multiWeb.showSiteIcons
-    val multiWebLandscapeMode: Boolean get() = multiWeb.landscapeMode
     val multiWebProjectId: String get() = multiWeb.projectId
 
     companion object
@@ -535,6 +537,7 @@ data class WebViewBehaviorBlock(
     val nativeBridgeFindInPage: Boolean = true,
     val nativeBridgeOrientation: Boolean = true,
     val nativeBridgeFullscreen: Boolean = true,
+    val nativeBridgePrint: Boolean = true,
     val databaseEnabled: Boolean = true,
     val enableCookiePersistence: Boolean = true,
     val enablePrivateNetworkBridge: Boolean = false,
@@ -545,6 +548,7 @@ data class WebViewBehaviorBlock(
     val enableBlobDownloadInterception: Boolean = true,
     val blobInterceptScope: String = "ALL",
     val blobInterceptThresholdMb: Int = 5,
+    val enablePrintBridge: Boolean = true,
     val enableCloudflareCompat: Boolean = true,
     val cloudflareCompatMode: String = "AUTO_DETECT",
     val primeUserActivation: Boolean = false,
@@ -631,6 +635,12 @@ data class DnsBlock(
     val config: DnsApkConfig = DnsApkConfig()
 )
 
+data class TlsFingerprintBlock(
+    val enabled: Boolean = false,
+    val template: String = "CHROME_131",
+    val customCipherSuites: List<String> = emptyList()
+)
+
 data class ErrorPageBlock(
     val mode: String = "BUILTIN_STYLE",
     val builtInStyle: String = "MATERIAL",
@@ -668,7 +678,6 @@ data class HtmlBlock(
     val enableJavaScript: Boolean = true,
     val enableLocalStorage: Boolean = true,
     val backgroundColor: String = "#FFFFFF",
-    val landscapeMode: Boolean = false,
     val loadMode: String = "AUTO",
     val port: Int = 0,
     val portConflictMode: String = "AUTO_KILL"
@@ -763,7 +772,7 @@ data class WordpressBlock(
     val siteLanguage: String = "zh_CN",
     val autoInstall: Boolean = true,
     val phpPort: Int = 0,
-    val landscapeMode: Boolean = false
+    val customPhpExtensions: List<com.webtoapp.data.model.CustomPhpExtension> = emptyList()
 )
 
 data class NodejsBlock(
@@ -771,7 +780,7 @@ data class NodejsBlock(
     val port: Int = 0,
     val entryFile: String = "",
     val envVars: Map<String, String> = emptyMap(),
-    val landscapeMode: Boolean = false
+    val customNodeExtensions: List<com.webtoapp.data.model.CustomNodeExtension> = emptyList()
 )
 
 data class PhpAppBlock(
@@ -780,8 +789,8 @@ data class PhpAppBlock(
     val entryFile: String = "index.php",
     val port: Int = 0,
     val envVars: Map<String, String> = emptyMap(),
-    val landscapeMode: Boolean = false,
-    val phpExtensions: Map<String, Boolean> = emptyMap()
+    val phpExtensions: Map<String, Boolean> = emptyMap(),
+    val customPhpExtensions: List<com.webtoapp.data.model.CustomPhpExtension> = emptyList()
 )
 
 data class PythonAppBlock(
@@ -791,7 +800,7 @@ data class PythonAppBlock(
     val serverType: String = "builtin",
     val port: Int = 0,
     val envVars: Map<String, String> = emptyMap(),
-    val landscapeMode: Boolean = false
+    val customPythonExtensions: List<com.webtoapp.data.model.CustomPythonExtension> = emptyList()
 )
 
 data class GoAppBlock(
@@ -801,7 +810,6 @@ data class GoAppBlock(
     val port: Int = 0,
     val staticDir: String = "",
     val envVars: Map<String, String> = emptyMap(),
-    val landscapeMode: Boolean = false
 )
 
 data class MultiWebBlock(
@@ -809,7 +817,6 @@ data class MultiWebBlock(
     val displayMode: String = "TABS",
     val refreshInterval: Int = 30,
     val showSiteIcons: Boolean = true,
-    val landscapeMode: Boolean = false,
     val projectId: String = ""
 )
 

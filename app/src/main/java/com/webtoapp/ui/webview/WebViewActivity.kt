@@ -612,6 +612,14 @@ class WebViewActivity : AppCompatActivity() {
                         wv.addJavascriptInterface(downloadBridge, com.webtoapp.core.webview.DownloadBridge.JS_INTERFACE_NAME)
 
                         val previewWvConfig = previewApp?.webViewConfig
+                        if (previewWvConfig?.enablePrintBridge != false) {
+                            val printBridge = com.webtoapp.core.webview.PrintBridge(
+                                context = this@WebViewActivity,
+                                scope = lifecycleScope,
+                                webViewProvider = { wv }
+                            )
+                            wv.addJavascriptInterface(printBridge, com.webtoapp.core.webview.PrintBridge.JS_INTERFACE_NAME)
+                        }
                         if (previewWvConfig?.enableNativeBridge == true) {
                             val nativeBridge = com.webtoapp.core.webview.NativeBridge(
                                 context = this@WebViewActivity,
@@ -2130,7 +2138,6 @@ fun WebViewScreen(
                     contentDisposition = contentDisposition,
                     mimeType = mimeType,
                     contentLength = contentLength,
-                    method = DownloadHelper.DownloadMethod.DOWNLOAD_MANAGER,
                     scope = scope,
                     onBlobDownload = { blobUrl, filename ->
                         val safeBlobUrl = org.json.JSONObject.quote(blobUrl)
@@ -2657,7 +2664,6 @@ fun WebViewScreen(
                             displayMode = multiWebConfig.displayMode,
                             refreshInterval = multiWebConfig.refreshInterval,
                             showSiteIcons = multiWebConfig.showSiteIcons,
-                            landscapeMode = multiWebConfig.landscapeMode,
                             projectId = multiWebConfig.projectId
                         ),
                         extensionModuleIds = mwApp.extensionModuleIds,

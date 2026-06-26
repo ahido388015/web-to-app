@@ -2,7 +2,6 @@ package com.webtoapp.core.engine
 
 import android.content.Context
 import com.webtoapp.core.logging.AppLogger
-import com.webtoapp.core.webview.OAuthCompatEngine
 import android.view.View
 import com.webtoapp.data.model.UserAgentMode
 import com.webtoapp.data.model.WebViewConfig
@@ -98,7 +97,7 @@ class GeckoViewEngine(
             val ech = currentDnsConfig?.echEffective == true
             val proxy = currentProxyConfig?.let { buildProxyPrefs(it) } ?: emptyMap()
             val proxyKey = proxy.entries.joinToString(",") { "${it.key}=${it.value}" }
-            return "ech=$ech|proxy=$proxyKey"
+            return "ech=$ech|proxy=$proxyKey|tlsMitm=$tlsMitmActive"
         }
 
         fun getRuntime(context: Context): GeckoRuntime {
@@ -146,6 +145,13 @@ class GeckoViewEngine(
 
         @Volatile
         private var currentProxyConfig: ProxyConfig? = null
+
+        @Volatile
+        private var tlsMitmActive: Boolean = false
+
+        fun setTlsMitmActive(active: Boolean) {
+            tlsMitmActive = active
+        }
 
         fun applyDnsConfig(config: com.webtoapp.data.model.DnsConfig) {
             currentDnsConfig = config
@@ -271,6 +277,10 @@ class GeckoViewEngine(
             }
 
             currentProxyConfig?.let { prefs.putAll(buildProxyPrefs(it)) }
+
+            if (tlsMitmActive) {
+                prefs["security.enterprise_roots.enabled"] = true
+            }
 
             val yaml = buildString {
                 append("prefs:\n")
@@ -453,9 +463,16 @@ class GeckoViewEngine(
                 val contentType = response.headers["Content-Type"] ?: "application/octet-stream"
                 val contentDisposition = response.headers["Content-Disposition"] ?: ""
                 val contentLength = response.headers["Content-Length"]?.toLongOrNull() ?: -1L
+                val ua = lastUserAgentOverride ?: lastConfig?.let { cfg ->
+                    when (cfg.userAgentMode) {
+                        UserAgentMode.DEFAULT -> ""
+                        UserAgentMode.CUSTOM -> cfg.customUserAgent ?: ""
+                        else -> cfg.userAgentMode.userAgentString
+                    }
+                } ?: ""
                 callback.onDownloadStart(
                     response.uri,
-                    "",
+                    ua,
                     contentDisposition,
                     contentType,
                     contentLength
@@ -498,6 +515,22 @@ class GeckoViewEngine(
                 if (uri.startsWith("tel:") || uri.startsWith("mailto:") || uri.startsWith("intent:")) {
                     callback.onExternalLink(uri)
                     return GeckoResult.fromValue(AllowOrDeny.DENY)
+                }
+
+                val cfg = lastConfig
+                if (cfg != null && cfg.openExternalLinks) {
+                    val scheme = runCatching { android.net.Uri.parse(uri).scheme?.lowercase() }.getOrNull()
+                    if (scheme == "http" || scheme == "https") {
+                        val targetHost = runCatching { android.net.Uri.parse(uri).host?.lowercase() }.getOrNull()
+                        val currentHost = runCatching { currentUrl?.let { android.net.Uri.parse(it).host?.lowercase() } }.getOrNull()
+                        if (targetHost != null && currentHost != null &&
+                            targetHost != currentHost &&
+                            !targetHost.endsWith(".$currentHost") &&
+                            !currentHost.endsWith(".$targetHost")) {
+                            callback.onExternalLink(uri)
+                            return GeckoResult.fromValue(AllowOrDeny.DENY)
+                        }
+                    }
                 }
 
                 return GeckoResult.fromValue(AllowOrDeny.ALLOW)

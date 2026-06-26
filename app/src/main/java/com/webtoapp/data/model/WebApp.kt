@@ -345,6 +345,8 @@ data class WebViewConfig(
     val blobInterceptScope: BlobInterceptScope = BlobInterceptScope.ALL,
     val blobInterceptThresholdMb: Int = 5,
 
+    val enablePrintBridge: Boolean = true,
+
     val primeUserActivation: Boolean = false,
     val primeUserActivationMode: PrimeUserActivationMode = PrimeUserActivationMode.SYNTHETIC_TAP,
     val primeUserActivationTiming: PrimeUserActivationTiming = PrimeUserActivationTiming.ON_PAGE_FINISHED,
@@ -382,6 +384,10 @@ data class WebViewConfig(
     val proxyPassword: String = "",
     val hostsMappingEnabled: Boolean = false,
     val hostsMappings: List<HostMappingEntry> = emptyList(),
+
+    val tlsFingerprintEnabled: Boolean = false,
+    val tlsFingerprintTemplate: String = "CHROME_131",
+    val tlsFingerprintCustomCiphers: List<String> = emptyList(),
 
     val dnsMode: String = "SYSTEM",
     val dnsConfig: DnsConfig = DnsConfig()
@@ -695,7 +701,7 @@ data class NodeJsConfig(
     val envVars: Map<String, String> = emptyMap(),
     val hasNodeModules: Boolean = false,
     val nodeVersion: String = "",
-    val landscapeMode: Boolean = false
+    val customNodeExtensions: List<CustomNodeExtension> = emptyList()
 )
 
 data class WordPressConfig(
@@ -714,7 +720,7 @@ data class WordPressConfig(
     val sourceType: String = "BLANK",
     val sourceProjectId: String = "",
     val phpPort: Int = 0,
-    val landscapeMode: Boolean = false
+    val customPhpExtensions: List<CustomPhpExtension> = emptyList()
 )
 
 data class PhpAppConfig(
@@ -726,9 +732,42 @@ data class PhpAppConfig(
     val phpPort: Int = 0,
     val envVars: Map<String, String> = emptyMap(),
     val hasComposerJson: Boolean = false,
-    val landscapeMode: Boolean = false,
-    val phpExtensions: Map<String, Boolean> = emptyMap()
+    val phpExtensions: Map<String, Boolean> = emptyMap(),
+    val customPhpExtensions: List<CustomPhpExtension> = emptyList()
 )
+
+data class CustomPhpExtension(
+    val name: String = "",
+    val soFileName: String = "",
+    val kind: Kind = Kind.EXTENSION,
+    val enabled: Boolean = true,
+    val loadOrder: Int = 0
+) {
+    enum class Kind {
+        EXTENSION,
+        ZEND_EXTENSION
+    }
+
+    fun effectiveSoName(): String = soFileName.takeIf { it.isNotBlank() } ?: "$name.so"
+}
+
+data class CustomPythonExtension(
+    val name: String = "",
+    val soFileName: String = "",
+    val enabled: Boolean = true,
+    val loadOrder: Int = 0
+) {
+    fun effectiveSoName(): String = soFileName.takeIf { it.isNotBlank() } ?: "${name}.so"
+}
+
+data class CustomNodeExtension(
+    val name: String = "",
+    val nodeFileName: String = "",
+    val enabled: Boolean = true,
+    val loadOrder: Int = 0
+) {
+    fun effectiveNodeName(): String = nodeFileName.takeIf { it.isNotBlank() } ?: "${name}.node"
+}
 
 data class PythonAppConfig(
     val projectId: String = "",
@@ -744,7 +783,7 @@ data class PythonAppConfig(
     val pythonVersion: String = "",
     val requirementsFile: String = "requirements.txt",
     val hasPipDeps: Boolean = false,
-    val landscapeMode: Boolean = false
+    val customPythonExtensions: List<CustomPythonExtension> = emptyList()
 )
 
 data class GoAppConfig(
@@ -755,8 +794,7 @@ data class GoAppConfig(
     val targetArch: String = "arm64",
     val serverPort: Int = 0,
     val envVars: Map<String, String> = emptyMap(),
-    val staticDir: String = "",
-    val landscapeMode: Boolean = false
+    val staticDir: String = ""
 )
 
 data class MultiWebConfig(
@@ -764,7 +802,6 @@ data class MultiWebConfig(
     val displayMode: String = "TABS",
     val refreshInterval: Int = 30,
     val showSiteIcons: Boolean = true,
-    val landscapeMode: Boolean = false,
     val projectId: String = ""
 )
 
@@ -818,7 +855,6 @@ data class HtmlConfig(
     val enableLocalStorage: Boolean = true,
     val allowFileAccess: Boolean = true,
     val backgroundColor: String = "#FFFFFF",
-    val landscapeMode: Boolean = false,
     val loadMode: HtmlLoadMode = HtmlLoadMode.FILE,
     val port: Int = 0,
     val portConflictMode: PortConflictMode = PortConflictMode.AUTO_KILL
@@ -1379,6 +1415,7 @@ data class NativeBridgeCapabilities(
     val findInPage: Boolean = true,
     val orientation: Boolean = true,
     val fullscreen: Boolean = true,
+    val print: Boolean = true,
 )
 
 enum class GeolocationAccuracy {

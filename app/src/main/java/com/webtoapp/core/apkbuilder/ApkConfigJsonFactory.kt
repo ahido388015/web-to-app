@@ -256,6 +256,7 @@ internal object ApkConfigJsonFactory {
         "nativeBridgeFindInPage" to webViewBehavior.nativeBridgeFindInPage,
         "nativeBridgeOrientation" to webViewBehavior.nativeBridgeOrientation,
         "nativeBridgeFullscreen" to webViewBehavior.nativeBridgeFullscreen,
+        "nativeBridgePrint" to webViewBehavior.nativeBridgePrint,
         "javaScriptCanOpenWindows" to webViewBehavior.javaScriptCanOpenWindows,
         "jsOpenWindowsPolicy" to webViewBehavior.jsOpenWindowsPolicy,
         "databaseEnabled" to webViewBehavior.databaseEnabled,
@@ -268,6 +269,7 @@ internal object ApkConfigJsonFactory {
         "enableBlobDownloadInterception" to webViewBehavior.enableBlobDownloadInterception,
         "blobInterceptScope" to webViewBehavior.blobInterceptScope,
         "blobInterceptThresholdMb" to webViewBehavior.blobInterceptThresholdMb,
+        "enablePrintBridge" to webViewBehavior.enablePrintBridge,
         "enableCloudflareCompat" to webViewBehavior.enableCloudflareCompat,
         "cloudflareCompatMode" to webViewBehavior.cloudflareCompatMode,
         "primeUserActivation" to webViewBehavior.primeUserActivation,
@@ -308,6 +310,9 @@ internal object ApkConfigJsonFactory {
         },
         "dnsMode" to dns.mode,
         "dnsConfig" to dns.config,
+        "tlsFingerprintEnabled" to tlsFingerprint.enabled,
+        "tlsFingerprintTemplate" to tlsFingerprint.template,
+        "tlsFingerprintCustomCiphers" to tlsFingerprint.customCipherSuites,
         "showFloatingBackButton" to webView.showFloatingBackButton,
         "downloadEnabled" to webView.downloadEnabled,
         "floatingWindowConfig" to floatingWindowConfigPayload(),
@@ -365,7 +370,6 @@ internal object ApkConfigJsonFactory {
         "enableJavaScript" to html.enableJavaScript,
         "enableLocalStorage" to html.enableLocalStorage,
         "backgroundColor" to html.backgroundColor,
-        "landscapeMode" to html.landscapeMode,
         "loadMode" to html.loadMode,
         "port" to html.port,
         "portConflictMode" to html.portConflictMode
@@ -478,7 +482,7 @@ internal object ApkConfigJsonFactory {
         "siteLanguage" to wordpress.siteLanguage,
         "autoInstall" to wordpress.autoInstall,
         "phpPort" to wordpress.phpPort,
-        "landscapeMode" to wordpress.landscapeMode
+        "customPhpExtensions" to wordpress.customPhpExtensions
     )
 
     private fun ApkConfig.nodejsConfigPayload(): Map<String, Any?> = linkedMapOf(
@@ -486,7 +490,7 @@ internal object ApkConfigJsonFactory {
         "port" to nodejs.port,
         "entryFile" to nodejs.entryFile,
         "envVars" to nodejs.envVars,
-        "landscapeMode" to nodejs.landscapeMode
+        "customNodeExtensions" to nodejs.customNodeExtensions
     )
 
     private fun ApkConfig.phpAppConfigPayload(): Map<String, Any?> = linkedMapOf(
@@ -495,8 +499,8 @@ internal object ApkConfigJsonFactory {
         "entryFile" to phpApp.entryFile,
         "port" to phpApp.port,
         "envVars" to phpApp.envVars,
-        "landscapeMode" to phpApp.landscapeMode,
-        "phpExtensions" to phpApp.phpExtensions
+        "phpExtensions" to phpApp.phpExtensions,
+        "customPhpExtensions" to phpApp.customPhpExtensions
     )
 
     private fun ApkConfig.pythonAppConfigPayload(): Map<String, Any?> = linkedMapOf(
@@ -506,7 +510,7 @@ internal object ApkConfigJsonFactory {
         "serverType" to pythonApp.serverType,
         "port" to pythonApp.port,
         "envVars" to pythonApp.envVars,
-        "landscapeMode" to pythonApp.landscapeMode
+        "customPythonExtensions" to pythonApp.customPythonExtensions
     )
 
     private fun ApkConfig.goAppConfigPayload(): Map<String, Any?> = linkedMapOf(
@@ -515,8 +519,7 @@ internal object ApkConfigJsonFactory {
         "targetArch" to goApp.targetArch,
         "port" to goApp.port,
         "staticDir" to goApp.staticDir,
-        "envVars" to goApp.envVars,
-        "landscapeMode" to goApp.landscapeMode
+        "envVars" to goApp.envVars
     )
 
     private fun ApkConfig.multiWebConfigPayload(): Map<String, Any?> = linkedMapOf(
@@ -524,7 +527,6 @@ internal object ApkConfigJsonFactory {
         "displayMode" to multiWeb.displayMode,
         "refreshInterval" to multiWeb.refreshInterval,
         "showSiteIcons" to multiWeb.showSiteIcons,
-        "landscapeMode" to multiWeb.landscapeMode,
         "projectId" to multiWeb.projectId
     )
 

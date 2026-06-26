@@ -2755,6 +2755,10 @@ builtins.__import__ = _w2a_import
             permissions += "android.permission.SYSTEM_ALERT_WINDOW"
         }
 
+        if (config.downloadEnabled) {
+            permissions += "android.permission.DOWNLOAD_WITHOUT_NOTIFICATION"
+        }
+
         if (rp.bluetooth) {
             permissions += "android.permission.NEARBY_WIFI_DEVICES"
         }
@@ -2836,6 +2840,7 @@ builtins.__import__ = _w2a_import
         if (translateEnabled) return true
         if (proxyMode != "NONE") return true
         if (dnsMode != "SYSTEM") return true
+        if (tlsFingerprintEnabled) return true
         if (pwaOfflineEnabled) return true
         if (enablePrivateNetworkBridge) return true
         if (enableCloudflareCompat && webViewBehavior.cloudflareCompatMode == "ALWAYS") return true
@@ -2908,6 +2913,7 @@ fun WebApp.toApkConfig(packageName: String, context: android.content.Context? = 
         floatingWindow = buildFloatingWindowBlock(),
         proxy = buildProxyBlock(),
         dns = buildDnsBlock(),
+        tlsFingerprint = buildTlsFingerprintBlock(),
         errorPage = buildErrorPageBlock(),
         splash = buildSplashBlock(),
         media = buildMediaBlock(),
@@ -3206,6 +3212,7 @@ private fun WebApp.buildWebViewBehaviorBlock(): WebViewBehaviorBlock = WebViewBe
     nativeBridgeFindInPage = webViewConfig.nativeBridgeCapabilities.findInPage,
     nativeBridgeOrientation = webViewConfig.nativeBridgeCapabilities.orientation,
     nativeBridgeFullscreen = webViewConfig.nativeBridgeCapabilities.fullscreen,
+    nativeBridgePrint = webViewConfig.nativeBridgeCapabilities.print,
     javaScriptCanOpenWindows = webViewConfig.javaScriptCanOpenWindows,
     jsOpenWindowsPolicy = webViewConfig.jsOpenWindowsPolicy.name,
     databaseEnabled = webViewConfig.databaseEnabled,
@@ -3218,6 +3225,7 @@ private fun WebApp.buildWebViewBehaviorBlock(): WebViewBehaviorBlock = WebViewBe
     enableBlobDownloadInterception = webViewConfig.enableBlobDownloadInterception,
     blobInterceptScope = webViewConfig.blobInterceptScope.name,
     blobInterceptThresholdMb = webViewConfig.blobInterceptThresholdMb,
+    enablePrintBridge = webViewConfig.enablePrintBridge,
     enableCloudflareCompat = webViewConfig.enableCloudflareCompat,
     cloudflareCompatMode = webViewConfig.cloudflareCompatMode.name,
     primeUserActivation = webViewConfig.primeUserActivation,
@@ -3311,6 +3319,12 @@ private fun WebApp.buildDnsBlock(): DnsBlock = DnsBlock(
     )
 )
 
+private fun WebApp.buildTlsFingerprintBlock(): TlsFingerprintBlock = TlsFingerprintBlock(
+    enabled = webViewConfig.tlsFingerprintEnabled,
+    template = webViewConfig.tlsFingerprintTemplate,
+    customCipherSuites = webViewConfig.tlsFingerprintCustomCiphers
+)
+
 private fun WebApp.buildErrorPageBlock(): ErrorPageBlock {
     val ep = webViewConfig.errorPageConfig
     return ErrorPageBlock(
@@ -3376,7 +3390,6 @@ private fun com.webtoapp.data.model.HtmlConfig?.toHtmlBlock(): HtmlBlock = HtmlB
     enableJavaScript = this?.enableJavaScript ?: true,
     enableLocalStorage = this?.enableLocalStorage ?: true,
     backgroundColor = this?.backgroundColor ?: "#FFFFFF",
-    landscapeMode = this?.landscapeMode ?: false,
     loadMode = this?.loadMode?.name ?: HtmlLoadMode.AUTO.name,
     port = this?.port ?: 0,
     portConflictMode = this?.portConflictMode?.name ?: "AUTO_KILL"
@@ -3530,7 +3543,7 @@ private fun WebApp.buildWordpressBlock(): WordpressBlock = WordpressBlock(
     siteLanguage = wordpressConfig?.siteLanguage ?: "zh_CN",
     autoInstall = wordpressConfig?.autoInstall ?: true,
     phpPort = wordpressConfig?.phpPort ?: 0,
-    landscapeMode = wordpressConfig?.landscapeMode ?: false
+    customPhpExtensions = wordpressConfig?.customPhpExtensions ?: emptyList()
 )
 
 private fun WebApp.buildNodejsBlock(): NodejsBlock = NodejsBlock(
@@ -3538,7 +3551,7 @@ private fun WebApp.buildNodejsBlock(): NodejsBlock = NodejsBlock(
     port = nodejsConfig?.serverPort ?: 0,
     entryFile = nodejsConfig?.entryFile ?: "",
     envVars = nodejsConfig?.envVars ?: emptyMap(),
-    landscapeMode = nodejsConfig?.landscapeMode ?: false
+    customNodeExtensions = nodejsConfig?.customNodeExtensions ?: emptyList()
 )
 
 private fun WebApp.buildPhpAppBlock(): PhpAppBlock = PhpAppBlock(
@@ -3547,8 +3560,8 @@ private fun WebApp.buildPhpAppBlock(): PhpAppBlock = PhpAppBlock(
     entryFile = phpAppConfig?.entryFile ?: "index.php",
     port = phpAppConfig?.phpPort ?: 0,
     envVars = phpAppConfig?.envVars ?: emptyMap(),
-    landscapeMode = phpAppConfig?.landscapeMode ?: false,
-    phpExtensions = phpAppConfig?.phpExtensions ?: emptyMap()
+    phpExtensions = phpAppConfig?.phpExtensions ?: emptyMap(),
+    customPhpExtensions = phpAppConfig?.customPhpExtensions ?: emptyList()
 )
 
 private fun WebApp.buildPythonAppBlock(): PythonAppBlock = PythonAppBlock(
@@ -3558,7 +3571,7 @@ private fun WebApp.buildPythonAppBlock(): PythonAppBlock = PythonAppBlock(
     serverType = pythonAppConfig?.serverType ?: "builtin",
     port = pythonAppConfig?.serverPort ?: 0,
     envVars = pythonAppConfig?.envVars ?: emptyMap(),
-    landscapeMode = pythonAppConfig?.landscapeMode ?: false
+    customPythonExtensions = pythonAppConfig?.customPythonExtensions ?: emptyList()
 )
 
 private fun WebApp.buildGoAppBlock(): GoAppBlock = GoAppBlock(
@@ -3567,8 +3580,7 @@ private fun WebApp.buildGoAppBlock(): GoAppBlock = GoAppBlock(
     targetArch = goAppConfig?.targetArch ?: "arm64-v8a",
     port = goAppConfig?.serverPort ?: 0,
     staticDir = goAppConfig?.staticDir ?: "",
-    envVars = goAppConfig?.envVars ?: emptyMap(),
-    landscapeMode = goAppConfig?.landscapeMode ?: false
+    envVars = goAppConfig?.envVars ?: emptyMap()
 )
 
 private fun WebApp.buildMultiWebBlock(context: android.content.Context?, packageName: String): MultiWebBlock {
@@ -3611,7 +3623,6 @@ private fun WebApp.buildMultiWebBlock(context: android.content.Context?, package
         displayMode = multiWebConfig?.displayMode ?: "TABS",
         refreshInterval = multiWebConfig?.refreshInterval ?: 30,
         showSiteIcons = multiWebConfig?.showSiteIcons ?: true,
-        landscapeMode = multiWebConfig?.landscapeMode ?: false,
         projectId = multiWebConfig?.projectId ?: ""
     )
 }

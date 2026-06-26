@@ -69,10 +69,10 @@ fun CreateNodeJsAppScreen(
 
     var buildMode by remember { mutableStateOf(NodeJsBuildMode.API_BACKEND) }
     var entryFile by remember { mutableStateOf("index.js") }
-    var landscapeMode by remember { mutableStateOf(false) }
     var envVars by remember { mutableStateOf<Map<String, String>>(emptyMap()) }
     var newEnvKey by remember { mutableStateOf("") }
     var newEnvValue by remember { mutableStateOf("") }
+    var customNodeExtensions by remember { mutableStateOf<List<com.webtoapp.data.model.CustomNodeExtension>>(emptyList()) }
 
     var selectedProjectDir by remember { mutableStateOf<String?>(null) }
     var detectedFramework by remember { mutableStateOf<String?>(null) }
@@ -116,8 +116,8 @@ fun CreateNodeJsAppScreen(
                 app.nodejsConfig?.let { config ->
                     buildMode = config.buildMode
                     entryFile = config.entryFile
-                    landscapeMode = config.landscapeMode
                     envVars = config.envVars.toMutableMap()
+                    customNodeExtensions = config.customNodeExtensions
                     detectedFramework = config.framework
                     projectId = config.projectId
                     selectedProjectDir = config.projectName
@@ -340,7 +340,7 @@ fun CreateNodeJsAppScreen(
             envVars = envVars,
             hasNodeModules = dependencies.isNotEmpty(),
             nodeVersion = nodeEngineVersion ?: "",
-            landscapeMode = landscapeMode
+            customNodeExtensions = customNodeExtensions
         )
     }
 
@@ -905,6 +905,13 @@ fun CreateNodeJsAppScreen(
                             }
                         }
                     }
+                }
+
+                if (buildMode != NodeJsBuildMode.STATIC) {
+                    NodeExtensionsCard(
+                        customExtensions = customNodeExtensions,
+                        onCustomExtensionsChange = { customNodeExtensions = it }
+                    )
                 }
 
                 if (detectedFramework != null) {

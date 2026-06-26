@@ -67,7 +67,8 @@ object ShellServerLauncher {
                 entryFile = entryFile,
                 port = config.phpAppConfig.port,
                 envVars = config.phpAppConfig.envVars,
-                phpExtensions = config.phpAppConfig.phpExtensions
+                phpExtensions = config.phpAppConfig.phpExtensions,
+                customPhpExtensions = config.phpAppConfig.customPhpExtensions
             )
             if (port > 0) {
                 LaunchResult(
@@ -119,7 +120,8 @@ object ShellServerLauncher {
                 framework = framework,
                 port = pyConfig.port,
                 envVars = pyConfig.envVars,
-                installDeps = true
+                installDeps = true,
+                customPythonExtensions = pyConfig.customPythonExtensions
             )
             if (port > 0) {
                 LaunchResult(
@@ -234,7 +236,8 @@ object ShellServerLauncher {
                 projectDir = projectDir.absolutePath,
                 entryFile = entryFile,
                 port = config.nodejsConfig.port,
-                envVars = envVars
+                envVars = envVars,
+                customNodeExtensions = config.nodejsConfig.customNodeExtensions
             )
             if (port > 0) {
                 LaunchResult(
@@ -270,7 +273,11 @@ object ShellServerLauncher {
             }
 
             val runtime = com.webtoapp.core.wordpress.WordPressPhpRuntime(context)
-            val port = runtime.startServer(wpDir.absolutePath, config.wordpressConfig.phpPort)
+            val port = runtime.startServer(
+                wpDir.absolutePath,
+                config.wordpressConfig.phpPort,
+                config.wordpressConfig.customPhpExtensions
+            )
             if (port <= 0) {
                 runtime.stopServer()
                 return LaunchResult(

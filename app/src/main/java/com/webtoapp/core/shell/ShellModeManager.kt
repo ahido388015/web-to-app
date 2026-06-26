@@ -785,8 +785,8 @@ data class WordPressShellConfig(
     @SerializedName("phpPort")
     val phpPort: Int = 0,
 
-    @SerializedName("landscapeMode")
-    val landscapeMode: Boolean = false
+    @SerializedName("customPhpExtensions")
+    val customPhpExtensions: List<com.webtoapp.data.model.CustomPhpExtension> = emptyList()
 )
 
 data class NodeJsShellConfig(
@@ -802,8 +802,8 @@ data class NodeJsShellConfig(
     @SerializedName("envVars")
     val envVars: Map<String, String> = emptyMap(),
 
-    @SerializedName("landscapeMode")
-    val landscapeMode: Boolean = false
+    @SerializedName("customNodeExtensions")
+    val customNodeExtensions: List<com.webtoapp.data.model.CustomNodeExtension> = emptyList()
 )
 
 data class PhpAppShellConfig(
@@ -822,11 +822,11 @@ data class PhpAppShellConfig(
     @SerializedName("envVars")
     val envVars: Map<String, String> = emptyMap(),
 
-    @SerializedName("landscapeMode")
-    val landscapeMode: Boolean = false,
-
     @SerializedName("phpExtensions")
-    val phpExtensions: Map<String, Boolean> = emptyMap()
+    val phpExtensions: Map<String, Boolean> = emptyMap(),
+
+    @SerializedName("customPhpExtensions")
+    val customPhpExtensions: List<com.webtoapp.data.model.CustomPhpExtension> = emptyList()
 )
 
 data class PythonAppShellConfig(
@@ -848,8 +848,8 @@ data class PythonAppShellConfig(
     @SerializedName("envVars")
     val envVars: Map<String, String> = emptyMap(),
 
-    @SerializedName("landscapeMode")
-    val landscapeMode: Boolean = false
+    @SerializedName("customPythonExtensions")
+    val customPythonExtensions: List<com.webtoapp.data.model.CustomPythonExtension> = emptyList()
 )
 
 data class GoAppShellConfig(
@@ -869,10 +869,7 @@ data class GoAppShellConfig(
     val staticDir: String = "",
 
     @SerializedName("envVars")
-    val envVars: Map<String, String> = emptyMap(),
-
-    @SerializedName("landscapeMode")
-    val landscapeMode: Boolean = false
+    val envVars: Map<String, String> = emptyMap()
 )
 
 data class MultiWebShellConfig(
@@ -887,9 +884,6 @@ data class MultiWebShellConfig(
 
     @SerializedName("showSiteIcons")
     val showSiteIcons: Boolean = true,
-
-    @SerializedName("landscapeMode")
-    val landscapeMode: Boolean = false,
 
     @SerializedName("projectId")
     val projectId: String = ""
@@ -973,9 +967,6 @@ data class HtmlShellConfig(
 
     @SerializedName("backgroundColor")
     val backgroundColor: String = "#FFFFFF",
-
-    @SerializedName("landscapeMode")
-    val landscapeMode: Boolean = false,
 
     @SerializedName("loadMode")
     val loadMode: String = "AUTO",
@@ -1299,6 +1290,9 @@ data class WebViewShellConfig(
     @SerializedName("nativeBridgeFullscreen")
     val nativeBridgeFullscreen: Boolean = true,
 
+    @SerializedName("nativeBridgePrint")
+    val nativeBridgePrint: Boolean = true,
+
     @SerializedName("javaScriptCanOpenWindows")
     val javaScriptCanOpenWindows: Boolean = false,
 
@@ -1334,6 +1328,9 @@ data class WebViewShellConfig(
 
     @SerializedName("blobInterceptThresholdMb")
     val blobInterceptThresholdMb: Int = 5,
+
+    @SerializedName("enablePrintBridge")
+    val enablePrintBridge: Boolean = true,
 
     @SerializedName("enableCloudflareCompat")
     val enableCloudflareCompat: Boolean = true,
@@ -1454,6 +1451,15 @@ data class WebViewShellConfig(
 
     @SerializedName("hostsMappings")
     val hostsMappings: List<HostMappingShellEntry> = emptyList(),
+
+    @SerializedName("tlsFingerprintEnabled")
+    val tlsFingerprintEnabled: Boolean = false,
+
+    @SerializedName("tlsFingerprintTemplate")
+    val tlsFingerprintTemplate: String = "CHROME_131",
+
+    @SerializedName("tlsFingerprintCustomCiphers")
+    val tlsFingerprintCustomCiphers: List<String> = emptyList(),
 
     @SerializedName("dnsMode")
     val dnsMode: String = "SYSTEM",

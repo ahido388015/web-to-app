@@ -101,6 +101,7 @@ object LivePreviewServerLauncher {
             entryFile = config.entryFile.ifBlank { "index.js" },
             port = config.serverPort,
             envVars = config.envVars,
+            customNodeExtensions = config.customNodeExtensions
         )
         if (port <= 0) return null
         return ServerHandle("http://127.0.0.1:$port") { runtime.stopServer() }
@@ -125,6 +126,7 @@ object LivePreviewServerLauncher {
             port = config.serverPort,
             envVars = config.envVars,
             installDeps = config.hasPipDeps,
+            customPythonExtensions = config.customPythonExtensions
         )
         if (port <= 0) return null
         return ServerHandle("http://127.0.0.1:$port") { runtime.stopServer() }
@@ -173,6 +175,7 @@ object LivePreviewServerLauncher {
             port = config.phpPort,
             envVars = config.envVars,
             phpExtensions = config.phpExtensions,
+            customPhpExtensions = config.customPhpExtensions
         )
         if (port <= 0) return null
         return ServerHandle("http://127.0.0.1:$port/") { runtime.stopServer() }
@@ -188,7 +191,11 @@ object LivePreviewServerLauncher {
         WordPressManager.ensureDbPhpExists(context, projectDir)
 
         val runtime = WordPressPhpRuntime(context)
-        val port = runtime.startServer(projectDir.absolutePath, config.phpPort)
+        val port = runtime.startServer(
+            projectDir.absolutePath,
+            config.phpPort,
+            config.customPhpExtensions
+        )
         if (port <= 0) return null
 
         val base = "http://127.0.0.1:$port"

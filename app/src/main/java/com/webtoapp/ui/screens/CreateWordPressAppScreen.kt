@@ -36,6 +36,8 @@ import com.webtoapp.core.wordpress.WordPressManager
 import com.webtoapp.core.wordpress.WordPressSampleManager
 import com.webtoapp.data.model.WordPressConfig
 import com.webtoapp.ui.components.*
+import com.webtoapp.ui.components.PhpExtensionsCard
+import com.webtoapp.data.model.CustomPhpExtension
 import com.webtoapp.ui.components.TypedSampleProjectsCard
 import com.webtoapp.ui.screens.create.WtaCreateFlowScaffold
 import com.webtoapp.ui.screens.create.WtaCreateFlowSection
@@ -69,7 +71,6 @@ fun CreateWordPressAppScreen(
     var adminUser by remember { mutableStateOf("admin") }
     var adminEmail by remember { mutableStateOf("") }
     var adminPassword by remember { mutableStateOf("admin") }
-    var landscapeMode by remember { mutableStateOf(false) }
     var sourceType by remember { mutableStateOf("BLANK") }
 
     var permalink by remember { mutableStateOf("postname") }
@@ -80,6 +81,7 @@ fun CreateWordPressAppScreen(
     var activeTheme by remember { mutableStateOf<String?>(null) }
     var detectedPlugins by remember { mutableStateOf<List<String>>(emptyList()) }
     var activePlugins by remember { mutableStateOf<Set<String>>(emptySet()) }
+    var customPhpExtensions by remember { mutableStateOf<List<CustomPhpExtension>>(emptyList()) }
     var wpVersion by remember { mutableStateOf<String?>(null) }
     var isImportMode by remember { mutableStateOf(false) }
 
@@ -222,7 +224,7 @@ fun CreateWordPressAppScreen(
                                 siteLanguage = siteLanguage,
                                 autoInstall = true,
                                 sourceType = sourceType,
-                                landscapeMode = landscapeMode
+                                customPhpExtensions = customPhpExtensions
                             ),
                             appIcon,
                             "AURORA"
@@ -333,16 +335,6 @@ fun CreateWordPressAppScreen(
                         modifier = Modifier.fillMaxWidth(),
                         singleLine = true
                     )
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(Strings.wpLandscapeMode)
-                        WtaSwitch(checked = landscapeMode, onCheckedChange = { landscapeMode = it })
-                    }
                 }
             }
 
@@ -476,6 +468,13 @@ fun CreateWordPressAppScreen(
                         }
                     },
                     accentColor = accentColor
+                )
+
+                PhpExtensionsCard(
+                    extensions = emptyMap(),
+                    onToggle = { _, _ -> },
+                    customExtensions = customPhpExtensions,
+                    onCustomExtensionsChange = { customPhpExtensions = it }
                 )
 
                 WpPermalinkCard(
